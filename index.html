@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Honeymoon 2026</title>
+    <title>Honeymoon 2026 | Ultimate Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -24,215 +24,284 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- 完整數據配置 ---
-        const HOTELS = {
-            rome: { name: 'Domus Appia 154', info: '含早餐 | 入 15:00 退 10:00', map: 'https://maps.app.goo.gl/YourRomeMapLink' },
-            barcelona: { name: 'Aparthotel Silver', info: '入 15:00 退 11:00', map: 'https://maps.app.goo.gl/YourBCNMapLink' },
-            bangkok1: { name: 'Gardina Asoke', info: '入 14:00 退 12:00', map: 'https://maps.app.goo.gl/YourBKK1MapLink' },
-            bangkok2: { name: 'Eastin Grand Phayathai', info: '含早餐 | 入 14:00 退 12:00', map: 'https://maps.app.goo.gl/YourBKK2MapLink' }
-        };
-
-        const VOYAGE = [
-            { date: '5/25', port: '羅馬出發 (Civitavecchia)', time: '20:00' },
-            { date: '5/26', port: '阿瑪菲海岸 (Salerno)', time: '08:00-19:00' },
-            { date: '5/27', port: '海上巡航 (Sailing)', time: '-' },
-            { date: '5/28', port: '坎城 (Cannes)', time: '08:00-17:00' },
-            { date: '5/29', port: '伊比薩 (Ibiza)', time: '19:00 抵達' },
-            { date: '5/30', port: '伊比薩 (Ibiza)', time: '17:00 離開' },
-            { date: '5/31', port: '巴塞隆納 (Barcelona)', time: '06:30 抵達' }
-        ];
-
-        const FLIGHTS = [
-            { date: '21.05.26', route: 'TPE ➔ BKK', flight: 'CI 835', time: '13:30 - 16:20', dur: '3:50h' },
-            { date: '21.05.26', route: 'BKK ➔ FRA', flight: 'DE 2367', time: '22:35 - 06:00+1', dur: '12:25h' },
-            { date: '22.05.26', route: 'FRA ➔ FCO', flight: 'DE 4439', time: '08:00 - 09:50', dur: '1:50h' },
-            { date: '02.06.26', route: 'BCN ➔ FRA', flight: 'DE 4324', time: '17:00 - 19:05', dur: '2:05h' },
-            { date: '10.06.26', route: 'BKK ➔ TPE', flight: 'VZ 566', time: '01:55 - 06:45', dur: '4:50h' }
-        ];
-
-        // --- 主應用程式 ---
         function App() {
-            const [view, setView] = useState('itinerary');
+            const [view, setView] = useState('home');
             const [activeDate, setActiveDate] = useState('5/22');
             const [showCalc, setShowCalc] = useState(false);
 
+            // --- 飯店數據預載 ---
+            const HOTELS = {
+                '5/22': { name: 'Domus Appia 154', note: '含早餐 | 入15:00 退10:00', map: 'https://www.google.com/maps/search/Domus+Appia+154' },
+                '5/31': { name: 'Aparthotel Silver', note: '入15:00 退11:00', map: 'https://www.google.com/maps/search/Aparthotel+Silver' },
+                '6/3': { name: 'Gardina Asoke Hotel', note: '入14:00 退12:00', map: 'https://www.google.com/maps/search/Gardina+Asoke' },
+                '6/5': { name: 'Eastin Grand Hotel Phayathai', note: '含早餐 | 入14:00 退12:00', map: 'https://www.google.com/maps/search/Eastin+Grand+Hotel+Phayathai' }
+            };
+
+            // --- 郵輪行程 ---
+            const VOYAGES = {
+                '5/25': 'Rome (Civitavecchia) 20:00 Dep',
+                '5/26': 'Amalfi Coast 08:00-19:00',
+                '5/27': 'At Sea (Sailing)',
+                '5/28': 'Cannes, France 08:00-17:00',
+                '5/29': 'Ibiza 19:00 Arrival',
+                '5/30': 'Ibiza 17:00 Departure',
+                '5/31': 'Barcelona 06:30 Arrival'
+            };
+
+            // --- 1. 行程表狀態 (支援增刪) ---
+            const [plans, setPlans] = useState([
+                { date: '5/22', items: [{ id: 1, time: '09:50', title: '抵達羅馬 FCO', icon: '🇮🇹' }, { id: 2, time: '15:00', title: '飯店 Check-in', icon: '🔑' }] },
+                { date: '5/23', items: [{ id: 3, time: '10:30', title: '梵蒂岡博物館', icon: '🏛️', highlight: true }] },
+                { date: '5/24', items: [{ id: 4, time: '12:10', title: '羅馬競技場', icon: '⚔️', highlight: true }] },
+                { date: '6/1', items: [{ id: 5, time: '14:45', title: '聖家堂 入場', icon: '⛪', highlight: true }, { id: 6, time: '15:30', title: '聖家堂 上塔 (Passion)', icon: '🗼' }] }
+            ]);
+
+            // --- 2. 帳本狀態 ---
+            const [expenses, setExpenses] = useState([]);
+
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [view, showCalc]);
 
+            // --- 核心組件：主首頁 ---
+            const Home = () => (
+                <div className="p-6 pt-16 animate-in fade-in">
+                    <h1 className="text-5xl font-black italic text-[#A67B5B] text-center mb-2">Honeymoon</h1>
+                    <p className="text-center text-[10px] tracking-[0.4em] opacity-40 font-black mb-12 uppercase">Italy - Spain - Thailand</p>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div onClick={() => setView('itinerary')} className="col-span-2 h-44 bg-[#B5C0D0] rounded-[2.5rem] p-6 text-white border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-end">
+                            <span className="text-3xl font-black">行程計畫</span>
+                        </div>
+                        <div onClick={() => setView('flights')} className="h-40 bg-[#F9D949] rounded-3xl p-5 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-between">
+                            <i data-lucide="plane" size={32}></i><span className="text-xl font-black">航班資訊</span>
+                        </div>
+                        <div onClick={() => setView('budget')} className="h-40 bg-[#CCD3CA] rounded-3xl p-5 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-between">
+                            <i data-lucide="wallet" size={32}></i><span className="text-xl font-black">蜜月帳本</span>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // --- 核心組件：行程 (可增刪) ---
+            const Itinerary = () => {
+                const dates = ["5/21", "5/22", "5/23", "5/24", "5/25", "5/26", "5/27", "5/28", "5/29", "5/30", "5/31", "6/1", "6/2", "6/3", "6/4", "6/5", "6/6", "6/7", "6/8", "6/9", "6/10"];
+                const currentDay = plans.find(p => p.date === activeDate) || { items: [] };
+
+                const handleAdd = () => {
+                    const time = prompt("輸入時間 (例如 14:00):");
+                    const title = prompt("輸入行程內容:");
+                    if (time && title) {
+                        const newPlans = [...plans];
+                        const idx = newPlans.findIndex(p => p.date === activeDate);
+                        const newItem = { id: Date.now(), time, title, icon: '📍' };
+                        if (idx > -1) newPlans[idx].items.push(newItem);
+                        else newPlans.push({ date: activeDate, items: [newItem] });
+                        setPlans(newPlans);
+                    }
+                };
+
+                const handleDelete = (id) => {
+                    if (confirm("確定刪除此行程？")) {
+                        const newPlans = plans.map(p => ({
+                            ...p,
+                            items: p.items.filter(item => item.id !== id)
+                        }));
+                        setPlans(newPlans);
+                    }
+                };
+
+                return (
+                    <div className="animate-in slide-in-from-right pb-32">
+                        <div className="bg-white sticky top-0 z-40 border-b-4 border-[#2D2D2D] p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <button onClick={() => setView('home')}><i data-lucide="chevron-left"></i></button>
+                                <div className="text-right">
+                                    <div className="font-black text-xl">May {activeDate.split('/')[1]}</div>
+                                    <div className="text-xs font-bold text-blue-500 flex items-center gap-1 justify-end"><i data-lucide="cloud-sun" size={12}></i> 24°C Sunny</div>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                                {dates.map(d => (
+                                    <button key={d} onClick={() => setActiveDate(d)} className={`flex-shrink-0 w-12 py-3 rounded-2xl border-2 border-[#2D2D2D] font-black ${activeDate === d ? 'bg-[#2D2D2D] text-white sticker-shadow' : 'bg-white opacity-40'}`}>
+                                        <div className="text-[8px]">{d.split('/')[0]}</div>{d.split('/')[1]}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="p-6 timeline-line relative space-y-6">
+                            {/* 飯店與郵輪靜態顯示 */}
+                            {HOTELS[activeDate] && (
+                                <div className="flex gap-6 relative z-10">
+                                    <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-[#F9D949] flex items-center justify-center shrink-0">🏠</div>
+                                    <div className="flex-1 bg-white border-4 border-[#2D2D2D] rounded-3xl p-4 sticker-shadow">
+                                        <div className="text-[8px] font-black opacity-30">HOTEL INFO</div>
+                                        <a href={HOTELS[activeDate].map} target="_blank" className="font-black text-blue-600 underline block">{HOTELS[activeDate].name}</a>
+                                        <div className="text-[10px] font-bold mt-1">{HOTELS[activeDate].note}</div>
+                                    </div>
+                                </div>
+                            )}
+                            {VOYAGES[activeDate] && (
+                                <div className="flex gap-6 relative z-10">
+                                    <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-[#B5C0D0] flex items-center justify-center shrink-0">🚢</div>
+                                    <div className="flex-1 bg-white border-4 border-[#2D2D2D] rounded-3xl p-4 sticker-shadow">
+                                        <div className="text-[8px] font-black opacity-30">CRUISE ITINERARY</div>
+                                        <div className="font-black">{VOYAGES[activeDate]}</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 動態行程項目 */}
+                            {currentDay.items.map(item => (
+                                <div key={item.id} className="flex gap-6 relative z-10 group">
+                                    <div className={`w-10 h-10 rounded-full border-4 border-[#2D2D2D] flex items-center justify-center shrink-0 sticker-shadow ${item.highlight ? 'bg-orange-400' : 'bg-white'}`}>{item.icon}</div>
+                                    <div className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-3xl p-4 sticker-shadow relative ${item.highlight ? 'ring-4 ring-orange-100' : ''}`}>
+                                        <div className="text-[10px] font-black opacity-30">{item.time}</div>
+                                        <div className="text-lg font-black">{item.title}</div>
+                                        <button onClick={() => handleDelete(item.id)} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full border-2 border-[#2D2D2D] hidden group-hover:flex items-center justify-center"><i data-lucide="x" size={12}></i></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="px-6 fixed bottom-24 left-0 right-0 z-40 max-w-md mx-auto">
+                            <button onClick={handleAdd} className="w-full py-4 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-full font-black sticker-shadow sticker-active text-xl">+ 新增本日行程</button>
+                        </div>
+                    </div>
+                );
+            };
+
+            // --- 核心組件：航班 (補齊所有段落與細節) ---
+            const Flights = () => {
+                const flightList = [
+                    { date: '21.05.26', route: 'TPE - BKK', flight: 'CI 835', time: '13:30 - 16:20', terminal: 'T2', dur: '3:50h', transit: 'Layover: 6h 15m' },
+                    { date: '21.05.26', route: 'BKK - FRA', flight: 'DE 2367', time: '22:35 - 06:00+1', terminal: 'T1', dur: '12:25h' },
+                    { date: '22.05.26', route: 'FRA - FCO', flight: 'DE 4439', time: '08:00 - 09:50', terminal: 'T1', dur: '1:50h' },
+                    { date: '02.06.26', route: 'BCN - FRA', flight: 'DE 4324', time: '17:00 - 19:05', terminal: 'T1', dur: '2:05h', transit: 'Layover: 1h 10m' },
+                    { date: '02.06.26', route: 'FRA - BKK', flight: 'DE 2366', time: '20:15 - 12:35+1', terminal: 'T1', dur: '11:20h' },
+                    { date: '10.06.26', route: 'BKK - TPE', flight: 'VZ 566', time: '01:55 - 06:45', terminal: 'BKK', dur: '4:50h' }
+                ];
+                return (
+                    <div className="p-6 pt-10 animate-in slide-in-from-right pb-20">
+                        <button onClick={() => setView('home')} className="mb-6"><i data-lucide="arrow-left"></i></button>
+                        <h2 className="text-4xl font-black italic mb-8">Flight Tickets</h2>
+                        {flightList.map((f, i) => (
+                            <div key={i} className="mb-6">
+                                <div className="bg-white border-4 border-[#2D2D2D] rounded-[2rem] overflow-hidden sticker-shadow">
+                                    <div className="bg-[#F9D949] p-4 flex justify-between border-b-4 border-[#2D2D2D]">
+                                        <span className="font-black">{f.date}</span>
+                                        <a href={`https://www.google.com/search?q=${f.flight}`} target="_blank" className="font-black underline text-blue-800 tracking-wider text-lg">{f.flight}</a>
+                                    </div>
+                                    <div className="p-6">
+                                        <div className="text-[10px] font-bold opacity-30 mb-1 uppercase">Terminal {f.terminal} | {f.dur}</div>
+                                        <div className="text-3xl font-black mb-1">{f.route}</div>
+                                        <div className="text-xl font-black text-red-500 italic">{f.time}</div>
+                                    </div>
+                                </div>
+                                {f.transit && <div className="flex justify-center my-4"><div className="bg-[#2D2D2D] text-white px-4 py-1 rounded-full text-[10px] font-black italic">{f.transit}</div></div>}
+                            </div>
+                        ))}
+                    </div>
+                );
+            };
+
+            // --- 核心組件：帳本 (計算功能修復) ---
+            const Budget = () => {
+                const [val, setVal] = useState('');
+                const [currency, setCurrency] = useState('EUR');
+                const rate = currency === 'EUR' ? 35.5 : 0.92;
+
+                const addExpense = () => {
+                    const title = prompt("消費名稱 (例如: 晚餐):");
+                    if (title && val) {
+                        const now = new Date();
+                        const newExp = {
+                            id: Date.now(),
+                            title,
+                            amount: val,
+                            curr: currency,
+                            twd: Math.round(val * rate),
+                            time: `${now.getHours()}:${now.getMinutes()}`,
+                            date: `${now.getMonth()+1}/${now.getDate()}`
+                        };
+                        setExpenses([newExp, ...expenses]);
+                        setVal('');
+                    }
+                };
+
+                return (
+                    <div className="p-6 animate-in slide-in-from-right">
+                        <button onClick={() => setView('home')} className="mb-6"><i data-lucide="arrow-left"></i></button>
+                        <div className="bg-white border-4 border-[#2D2D2D] rounded-[2.5rem] p-8 mb-8 sticker-shadow">
+                            <div className="flex justify-between items-center mb-6">
+                                <span className="font-black opacity-30">QUICK RECORD</span>
+                                <button onClick={() => setCurrency(currency === 'EUR' ? 'THB' : 'EUR')} className="bg-[#2D2D2D] text-white px-4 py-1 rounded-full text-xs font-black sticker-shadow">
+                                    ➔ 切換 {currency === 'EUR' ? '泰銖' : '歐元'}
+                                </button>
+                            </div>
+                            <input type="number" value={val} onChange={e => setVal(e.target.value)} className="w-full text-6xl font-black outline-none mb-2" placeholder="0" />
+                            <div className="text-2xl text-blue-600 font-black">≈ NT$ {val ? Math.round(val * rate).toLocaleString() : 0}</div>
+                        </div>
+                        <button onClick={addExpense} className="w-full py-6 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-[2rem] text-2xl font-black sticker-shadow sticker-active mb-10">確認記帳</button>
+                        
+                        <div className="space-y-4 pb-20">
+                            <h3 className="font-black text-xs opacity-30 px-2 uppercase tracking-widest">History</h3>
+                            {expenses.map(exp => (
+                                <div key={exp.id} className="bg-white border-4 border-[#2D2D2D] rounded-3xl p-5 flex justify-between items-center sticker-shadow">
+                                    <div>
+                                        <div className="font-black text-lg">{exp.title}</div>
+                                        <div className="text-[10px] font-bold opacity-30 uppercase">{exp.date} | {exp.time}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xl font-black text-red-500">{exp.curr} {exp.amount}</div>
+                                        <div className="text-xs font-bold opacity-30">NT$ {exp.twd}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
             return (
-                <div className="max-w-md mx-auto min-h-screen pb-32 relative">
+                <div className="max-w-md mx-auto min-h-screen pb-20 relative overflow-x-hidden">
+                    {view === 'home' && <Home />}
+                    {view === 'itinerary' && <Itinerary />}
+                    {view === 'flights' && <Flights />}
+                    {view === 'budget' && <Budget />}
+
                     {/* 全域懸浮計算機 */}
                     <button onClick={() => setShowCalc(true)} className="fixed bottom-28 right-6 w-14 h-14 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-full sticker-shadow z-50 flex items-center justify-center">
                         <i data-lucide="calculator"></i>
                     </button>
 
-                    {view === 'itinerary' && <ItineraryView activeDate={activeDate} setActiveDate={setActiveDate} />}
-                    {view === 'flights' && <FlightsView />}
-                    {view === 'budget' && <BudgetView />}
-                    {view === 'checklist' && <ChecklistView />}
-
-                    {/* 底部選單 */}
-                    <nav className="fixed bottom-6 left-0 right-0 px-6 z-40">
+                    {/* 導覽列 */}
+                    <nav className="fixed bottom-6 left-0 right-0 px-6 z-40 max-w-md mx-auto">
                         <div className="bg-white border-4 border-[#2D2D2D] rounded-full h-16 flex items-center justify-around sticker-shadow">
+                            <button onClick={() => setView('home')} className={view === 'home' ? "text-[#A67B5B]" : "opacity-30"}><i data-lucide="home"></i></button>
                             <button onClick={() => setView('itinerary')} className={view === 'itinerary' ? "text-[#A67B5B]" : "opacity-30"}><i data-lucide="map"></i></button>
                             <button onClick={() => setView('flights')} className={view === 'flights' ? "text-[#A67B5B]" : "opacity-30"}><i data-lucide="plane"></i></button>
                             <button onClick={() => setView('budget')} className={view === 'budget' ? "text-[#A67B5B]" : "opacity-30"}><i data-lucide="wallet"></i></button>
-                            <button onClick={() => setView('checklist')} className={view === 'checklist' ? "text-[#A67B5B]" : "opacity-30"}><i data-lucide="check-square"></i></button>
                         </div>
                     </nav>
 
-                    {showCalc && <GlobalCalculator onClose={() => setShowCalc(false)} />}
-                </div>
-            );
-        }
-
-        // --- 子頁面：行程 (Timeline) ---
-        function ItineraryView({ activeDate, setActiveDate }) {
-            const dates = ["5/21", "5/22", "5/23", "5/24", "5/25", "5/26", "5/27", "5/28", "5/29", "5/30", "5/31", "6/1", "6/2", "6/3"];
-            
-            return (
-                <div>
-                    <div className="p-6 bg-white sticky top-0 z-30 border-b-4 border-[#2D2D2D]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-black italic">Honeymoon 2026</h2>
-                            <div className="text-xs font-bold bg-blue-50 px-2 py-1 rounded border border-blue-200 flex items-center gap-1">
-                                <i data-lucide="cloud-sun" size="14"></i> 24°C Rome
-                            </div>
-                        </div>
-                        <div className="flex gap-3 overflow-x-auto no-scrollbar">
-                            {dates.map(d => (
-                                <button key={d} onClick={() => setActiveDate(d)} className={`flex-shrink-0 w-12 py-2 rounded-xl border-2 border-[#2D2D2D] font-black transition-all ${activeDate === d ? 'bg-[#2D2D2D] text-white' : 'bg-white'}`}>
-                                    <div className="text-[8px] opacity-50">{d.split('/')[0]}</div>
-                                    {d.split('/')[1]}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    
-                    <div className="p-6 timeline-line relative space-y-8">
-                        {/* 這裡會根據日期切換顯示項目，以下為範例內容 */}
-                        {activeDate === '5/22' && (
-                            <>
-                                <TimelineItem time="09:50" title="抵達羅馬 FCO" icon="🇮🇹" />
-                                <TimelineItem time="15:00" title="飯店入住" icon="🔑" isHotel hotel={HOTELS.rome} />
-                            </>
-                        )}
-                        {activeDate === '5/23' && (
-                            <TimelineItem time="10:30" title="梵蒂岡博物館" icon="🏛️" highlight />
-                        )}
-                        {activeDate === '5/24' && (
-                            <TimelineItem time="12:10" title="羅馬競技場" icon="⚔️" highlight />
-                        )}
-                        {activeDate.startsWith('5/2') && parseInt(activeDate.split('/')[1]) >= 25 && (
-                             <TimelineItem time="Cruise" title="郵輪行程" icon="🚢" subtitle={VOYAGE.find(v => v.date === activeDate)?.port} />
-                        )}
-                        {activeDate === '6/1' && (
-                            <TimelineItem time="14:45" title="聖家堂 入場" icon="⛪" highlight subtitle="15:30 上塔 (Passion facade)" />
-                        )}
-                    </div>
-                    <div className="px-6"><button className="w-full py-4 bg-white border-4 border-[#2D2D2D] rounded-2xl font-black sticker-shadow">+ 新增行程</button></div>
-                </div>
-            );
-        }
-
-        function TimelineItem({ time, title, icon, isHotel, hotel, highlight, subtitle }) {
-            return (
-                <div className="flex gap-6 relative z-10">
-                    <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-[#F9D949] flex items-center justify-center sticker-shadow shrink-0 text-lg">{icon}</div>
-                    <div className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-3xl p-4 sticker-shadow ${highlight ? 'border-orange-400' : ''}`}>
-                        <div className="text-[10px] font-black opacity-30 uppercase">{time}</div>
-                        <div className="text-lg font-black">{title}</div>
-                        {subtitle && <div className="text-xs text-red-500 font-bold">{subtitle}</div>}
-                        {isHotel && (
-                            <div className="mt-3 pt-3 border-t-2 border-dashed border-gray-100">
-                                <a href={hotel.map} target="_blank" className="text-blue-600 font-bold flex items-center gap-1 underline underline-offset-4">
-                                    <i data-lucide="map-pin" size="12"></i> {hotel.name}
-                                </a>
-                                <div className="text-[10px] mt-1 opacity-50">{hotel.info}</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        // --- 子頁面：航班 ---
-        function FlightsView() {
-            return (
-                <div className="p-6 pt-10">
-                    <h2 className="text-3xl font-black mb-8 italic">Flights</h2>
-                    <div className="space-y-6">
-                        {FLIGHTS.map((f, i) => (
-                            <div key={i} className="bg-white border-4 border-[#2D2D2D] rounded-[2rem] overflow-hidden sticker-shadow">
-                                <div className="bg-[#F9D949] p-3 px-6 flex justify-between border-b-4 border-[#2D2D2D] font-black text-xs uppercase">
-                                    <span>{f.date}</span><span>{f.flight}</span>
-                                </div>
-                                <div className="p-6">
-                                    <div className="text-2xl font-black">{f.route}</div>
-                                    <div className="text-blue-600 font-bold my-1">{f.time}</div>
-                                    <a href={`https://www.google.com/search?q=${f.flight}`} target="_blank" className="text-[10px] opacity-40 underline">Google 航班動態 ➔</a>
+                    {/* 計算機彈窗 */}
+                    {showCalc && (
+                        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-6">
+                            <div className="bg-[#F9D949] w-full max-w-xs rounded-[3rem] border-4 border-[#2D2D2D] p-10 relative sticker-shadow animate-in zoom-in">
+                                <button onClick={() => setShowCalc(false)} className="absolute right-6 top-6"><i data-lucide="x"></i></button>
+                                <h3 className="text-3xl font-black mb-8 italic text-center">Exchange</h3>
+                                <input type="number" autoFocus className="w-full text-4xl p-5 rounded-2xl border-4 border-[#2D2D2D] font-black outline-none mb-6" placeholder="€" onChange={(e)=>document.getElementById('res-val').innerText = Math.round(e.target.value * 35.5).toLocaleString()} />
+                                <div className="bg-white p-6 rounded-2xl border-4 border-[#2D2D2D] text-center">
+                                    <div id="res-val" className="text-4xl font-black text-blue-600">0</div>
+                                    <div className="text-[10px] font-black opacity-30 mt-1 uppercase">TWD Total</div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-
-        // --- 子頁面：記帳本 (置頂大計算機) ---
-        function BudgetView() {
-            const [val, setVal] = useState('');
-            const [mode, setMode] = useState('EUR'); // EUR or THB
-            const rate = mode === 'EUR' ? 35.5 : 0.92;
-
-            return (
-                <div className="p-6">
-                    <div className="bg-white border-4 border-[#2D2D2D] rounded-[3rem] p-8 mb-8 sticker-shadow">
-                        <div className="flex justify-between mb-4">
-                            <span className="font-black opacity-30">QUICK RECORD</span>
-                            <button onClick={() => setMode(mode === 'EUR' ? 'THB' : 'EUR')} className="bg-[#2D2D2D] text-white px-4 py-1 rounded-full text-xs font-black">
-                                切換 {mode === 'EUR' ? '泰銖' : '歐元'}
-                            </button>
                         </div>
-                        <input type="number" value={val} onChange={e => setVal(e.target.value)} className="w-full text-6xl font-black outline-none" placeholder="0" />
-                        <div className="text-2xl text-blue-600 font-black mt-2">≈ NT$ {val ? Math.round(val * rate).toLocaleString() : 0}</div>
-                    </div>
-                    <button className="w-full py-6 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-[2rem] text-2xl font-black sticker-shadow sticker-active mb-10">確認記帳</button>
+                    )}
                 </div>
             );
         }
 
-        // --- 懸浮計算機組件 ---
-        function GlobalCalculator({ onClose }) {
-            const [val, setVal] = useState('');
-            return (
-                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-center justify-center p-6">
-                    <div className="bg-[#F9D949] w-full max-w-xs rounded-[3rem] border-4 border-[#2D2D2D] p-10 relative sticker-shadow animate-in zoom-in duration-200">
-                        <button onClick={onClose} className="absolute right-6 top-6"><i data-lucide="x"></i></button>
-                        <h3 className="text-3xl font-black mb-8 italic">Calc.</h3>
-                        <input type="number" autoFocus className="w-full text-4xl p-4 rounded-2xl border-4 border-[#2D2D2D] font-black outline-none mb-6 shadow-inner" value={val} onChange={e => setVal(e.target.value)} placeholder="€" />
-                        <div className="bg-white p-6 rounded-2xl border-4 border-[#2D2D2D] text-center font-black text-4xl text-blue-600">NT$ {val ? Math.round(val * 35.5).toLocaleString() : 0}</div>
-                    </div>
-                </div>
-            );
-        }
-
-        function ChecklistView() {
-            return (
-                <div className="p-6">
-                    <h2 className="text-3xl font-black mb-8 italic">Packing List</h2>
-                    <div className="space-y-4">
-                        {['護照', '郵輪正裝', '歐規轉接頭', '泰銖/歐元現金'].map(i => (
-                            <div key={i} className="bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex items-center gap-4 sticker-shadow">
-                                <input type="checkbox" className="w-6 h-6 border-4 border-[#2D2D2D] rounded" />
-                                <span className="font-black text-lg">{i}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
