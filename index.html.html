@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Honeymoon Diary</title>
+    <!-- 載入 CSS 與 圖標庫 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 載入 React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .sticker-shadow { box-shadow: 6px 6px 0px 0px #2D2D2D; }
+        .sticker-active:active { box-shadow: 2px 2px 0px 0px #2D2D2D; transform: translate(2px, 2px); }
+    </style>
+</head>
+<body class="bg-[#F5E8DD]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- 注意：請在此處填入你的 Firebase 配置 ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // 這裡預設放一些示範數據，當你連上 Firebase 後會自動被雲端數據覆蓋
+        const INITIAL_DATA = [
+            { date: '5/21', city: '台北 ➔ 曼谷', weather: '晴 34°C', items: [{ id: '1', time: '13:30', title: 'TPE 起飛', icon: '✈️' }] },
+            { date: '5/22', city: '羅馬', weather: '晴 22°C', items: [{ id: '2', time: '09:50', title: '抵達羅馬', icon: '🇮🇹' }] }
+        ];
+
+        function App() {
+            const [view, setView] = useState('home');
+            const [plans, setPlans] = useState(INITIAL_DATA);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [view]);
+
+            const stickerClass = "border-4 border-[#2D2D2D] sticker-shadow sticker-active transition-all";
+
+            return (
+                <div className="max-w-md mx-auto min-h-screen pb-20 text-[#2D2D2D] font-bold">
+                    {view === 'home' && (
+                        <div className="p-6 pt-10">
+                            <header className="text-center mb-10">
+                                <h1 className="text-4xl italic font-serif text-[#A67B5B]">Honeymoon Diary</h1>
+                                <p className="text-[10px] tracking-widest opacity-60">EUROPE & THAILAND 2026</p>
+                            </header>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div onClick={() => setView('itinerary')} className={`col-span-2 h-40 bg-[#B5C0D0] rounded-3xl p-6 flex flex-col justify-end ${stickerClass}`}>
+                                    <div className="text-2xl text-white">行程計畫</div>
+                                </div>
+                                <div onClick={() => setView('budget')} className={`h-40 bg-[#CCD3CA] rounded-3xl p-4 flex flex-col justify-between ${stickerClass}`}>
+                                    <i data-lucide="credit-card"></i>
+                                    <div className="text-xl">蜜月帳本</div>
+                                </div>
+                                <div onClick={() => setView('checklist')} className={`h-40 bg-[#EED3D9] rounded-3xl p-4 flex flex-col justify-between ${stickerClass}`}>
+                                    <i data-lucide="check-square"></i>
+                                    <div className="text-xl">行李清單</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'itinerary' && (
+                        <div className="p-6">
+                            <button onClick={() => setView('home')} className="mb-4 flex items-center gap-1 opacity-50"><i data-lucide="home" size="16"></i> 返回</button>
+                            <h2 className="text-3xl mb-6">行程細節</h2>
+                            {plans.map((p, i) => (
+                                <div key={i} className="bg-white p-6 rounded-[2rem] border-4 border-[#2D2D2D] mb-4 sticker-shadow">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="text-xs bg-[#F9D949] px-3 py-1 rounded-full">{p.date}</span>
+                                        <span className="text-xl">{p.city}</span>
+                                    </div>
+                                    {p.items.map(item => (
+                                        <div key={item.id} className="flex gap-3 items-center py-2">
+                                            <span className="text-2xl">{item.icon}</span>
+                                            <div>
+                                                <div className="text-[10px] opacity-40">{item.time}</div>
+                                                <div>{item.title}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    
+                    {/* 底部導航欄 */}
+                    <div className="fixed bottom-0 left-0 right-0 p-4 flex justify-center pointer-events-none">
+                        <div className="bg-white border-4 border-[#2D2D2D] rounded-full px-6 py-3 flex gap-8 pointer-events-auto shadow-xl">
+                            <button onClick={() => setView('home')}><i data-lucide="home"></i></button>
+                            <button onClick={() => setView('itinerary')}><i data-lucide="map"></i></button>
+                            <button onClick={() => setView('budget')}><i data-lucide="calculator"></i></button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
