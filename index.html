@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Honeymoon Diary - Bill & Cindy</title>
+    <title>Honeymoon - Bill & Cindy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -58,56 +58,60 @@
                 '6/10': { city: 'Taipei', weather: '☁️ 27°C' }
             };
 
-            const FLIGHT_DATA = [
-                { date: '5/21', flight: 'CI835', route: 'TPE ➔ BKK', time: '13:30 - 16:20' },
-                { date: '5/21', flight: 'DE2367', route: 'BKK ➔ FRA', time: '22:35 - 06:00+1' },
-                { date: '5/22', flight: 'DE4439', route: 'FRA ➔ FCO', time: '08:00 - 09:50' },
-                { date: '6/2', flight: 'DE4324', route: 'BCN ➔ FRA', time: '17:00 - 19:05' },
-                { date: '6/2', flight: 'DE2366', route: 'FRA ➔ BKK', time: '20:15 - 12:35+1' },
-                { date: '6/10', flight: 'VZ566', route: 'BKK ➔ TPE', time: '01:55 - 06:45' }
-            ];
-
-            const getHotelForDate = (dateStr) => {
-                const d = new Date(`2026/${dateStr}`);
-                if (d >= new Date('2026/5/22') && d <= new Date('2026/5/25')) 
-                    return { name: 'Domus Appia 154', note: '✓ 有含早餐 | 入 15:00 退 10:00' };
-                if (d >= new Date('2026/5/31') && d <= new Date('2026/6/2')) 
-                    return { name: 'Aparthotel Silver', note: '✗ 不含早餐 | 入 15:00 退 11:00' };
-                if (d >= new Date('2026/6/3') && d <= new Date('2026/6/8')) 
-                    return { name: 'Gardina Asoke Hotel', note: '✗ 不含早餐 | 入 14:00 退 12:00' };
-                if (d >= new Date('2026/6/8') && d <= new Date('2026/6/9')) 
-                    return { name: 'Eastin Grand Hotel Phayathai', note: '✓ 有含早餐 | 入 14:00 退 12:00' };
-                return null;
-            };
-
             const [plans, setPlans] = useState([
+                { date: '5/21', items: [{ id: 'f1', time: '13:30', title: 'CI835 | TPE ➔ BKK', icon: '✈️' }, { id: 'f2', time: '22:35', title: 'DE2367 | BKK ➔ FRA', icon: '✈️' }] },
+                { date: '5/22', items: [{ id: 'f3', time: '08:00', title: 'DE4439 | FRA ➔ FCO', icon: '✈️' }] },
                 { date: '5/23', items: [{ id: 101, time: '10:30', title: '【已訂票】梵蒂岡博物館', icon: '🏛️', highlight: true }] },
                 { date: '5/24', items: [{ id: 102, time: '12:10', title: '【已訂票】羅馬競技場', icon: '⚔️', highlight: true }] },
                 { date: '5/25', items: [{ id: 999, time: '15:00', title: '🚢 報到登船 Check-in', icon: '⚓', highlight: true }, { id: 201, time: '20:00', title: '郵輪啟航：Civitavecchia', icon: '🚢', highlight: false }] },
-                { date: '6/1', items: [{ id: 103, time: '14:45', title: '【已訂票】聖家堂 入場', icon: '⛪', highlight: true }] }
+                { date: '5/26', items: [{ id: 301, time: '08:00', title: '抵達 Salerno (Amalfi Coast)', icon: '🍋' }, { id: 302, time: '19:00', title: '郵輪啟航 (Salerno)', icon: '🚢' }] },
+                { date: '5/28', items: [{ id: 401, time: '08:00', title: '抵達 Cannes, France', icon: '🇫🇷' }, { id: 402, time: '17:00', title: '郵輪啟航 (Cannes)', icon: '🚢' }] },
+                { date: '5/29', items: [{ id: 501, time: '19:00', title: '抵達 Ibiza, Spain (過夜)', icon: '💃' }] },
+                { date: '5/30', items: [{ id: 502, time: '17:00', title: '郵輪啟航 (Ibiza)', icon: '🚢' }] },
+                { date: '5/31', items: [{ id: 601, time: '06:30', title: '抵達 Barcelona (下船)', icon: '🥘' }] },
+                { date: '6/1', items: [{ id: 103, time: '14:45', title: '【已訂票】聖家堂 入場', icon: '⛪', highlight: true }] },
+                { date: '6/2', items: [{ id: 'f4', time: '17:00', title: 'DE4324 | BCN ➔ FRA', icon: '✈️' }, { id: 'f5', time: '20:15', title: 'DE2366 | FRA ➔ BKK', icon: '✈️' }] },
+                { date: '6/10', items: [{ id: 'f6', time: '01:55', title: 'VZ566 | BKK ➔ TPE', icon: '✈️' }] }
             ]);
 
+            const getHotelForDate = (dateStr) => {
+                const d = new Date(`2026/${dateStr}`);
+                if (d >= new Date('2026/5/22') && d <= new Date('2026/5/25')) return { name: 'Domus Appia 154', note: '✓ 有含早餐 | 入 15:00 退 10:00' };
+                if (d >= new Date('2026/5/31') && d <= new Date('2026/6/2')) return { name: 'Aparthotel Silver', note: '✗ 不含早餐 | 入 15:00 退 11:00' };
+                if (d >= new Date('2026/6/3') && d <= new Date('2026/6/8')) return { name: 'Gardina Asoke Hotel', note: '✗ 不含早餐 | 入 14:00 退 12:00' };
+                if (d >= new Date('2026/6/8') && d <= new Date('2026/6/9')) return { name: 'Eastin Grand Hotel Phayathai', note: '✓ 有含早餐 | 入 14:00 退 12:00' };
+                return null;
+            };
+
+            const moveItem = (date, index, direction) => {
+                const dayPlan = plans.find(p => p.date === date);
+                if (!dayPlan) return;
+                const newItems = [...dayPlan.items];
+                const targetIndex = index + direction;
+                if (targetIndex < 0 || targetIndex >= newItems.length) return;
+                [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
+                setPlans(plans.map(p => p.date === date ? { ...p, items: newItems } : p));
+            };
+
             const [expenses, setExpenses] = useState([]);
-            const [checklist, setChecklist] = useState([
-                { id: 1, text: '護照與簽證', done: false }, { id: 2, text: '歐規轉接頭', done: false }
-            ]);
+            const [checklist, setChecklist] = useState([{ id: 1, text: '護照與簽證', done: false }, { id: 2, text: '歐規轉接頭', done: false }]);
 
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [view, activeDate, plans, checklist, expenses]);
 
             const Home = () => (
                 <div className="p-6 pt-32 animate-in fade-in">
-                    <div className="text-center mb-20">
-                        <h1 className="text-6xl font-diary text-[#A67B5B] leading-none mb-4">Honeymoon Diary</h1>
+                    <div className="text-center mb-8">
+                        <h1 className="text-6xl font-diary text-[#A67B5B] leading-none mb-4">Honeymoon</h1>
                         <p className="text-2xl font-diary text-[#2D2D2D] opacity-40">Bill & Cindy</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <div onClick={() => setView('itinerary')} className="col-span-2 h-40 bg-[#B5C0D0] rounded-[2.5rem] p-8 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-end text-white"><span className="text-4xl font-black italic">ITINERARY</span></div>
+                        <div onClick={() => setView('itinerary')} className="col-span-2 h-40 bg-[#B5C0D0] rounded-[2.5rem] p-8 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-between text-white">
+                            <span className="text-2xl">🗓️</span>
+                            <span className="text-4xl font-black italic">ITINERARY</span>
+                        </div>
                         <div onClick={() => setView('flights')} className="h-40 bg-[#F9D949] rounded-3xl p-6 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-between"><i data-lucide="plane"></i><span className="text-xl font-black italic">FLIGHTS</span></div>
                         <div onClick={() => setView('budget')} className="h-40 bg-[#CCD3CA] rounded-3xl p-6 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-between"><i data-lucide="wallet"></i><span className="text-xl font-black italic">BUDGET</span></div>
-                        <div onClick={() => setView('packing')} className="col-span-2 h-20 bg-white rounded-2xl p-6 border-4 border-[#2D2D2D] sticker-shadow flex items-center justify-between sticker-active">
-                            <div className="flex items-center gap-4"><i data-lucide="list-checks"></i><span className="font-black italic text-xl">PACKING LIST</span></div>
-                            <i data-lucide="chevron-right"></i>
-                        </div>
+                        <div onClick={() => setView('packing')} className="col-span-2 h-20 bg-white rounded-2xl p-6 border-4 border-[#2D2D2D] sticker-shadow flex items-center justify-between sticker-active"><div className="flex items-center gap-4"><i data-lucide="list-checks"></i><span className="font-black italic text-xl">PACKING LIST</span></div><i data-lucide="chevron-right"></i></div>
                     </div>
                 </div>
             );
@@ -117,7 +121,6 @@
                 const info = CITY_INFO[activeDate] || { city: 'Exploring', weather: '--' };
                 const hotel = getHotelForDate(activeDate);
                 const currentItems = plans.find(p => p.date === activeDate)?.items || [];
-                const dayFlights = FLIGHT_DATA.filter(f => f.date === activeDate);
                 
                 return (
                     <div className="animate-in slide-in-from-right pb-40">
@@ -136,18 +139,6 @@
                             </div>
                         </div>
                         <div className="p-6 timeline-line relative space-y-6">
-                            {dayFlights.map((f, idx) => (
-                                <div key={`f-${idx}`} className="flex gap-6 relative z-10">
-                                    <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-sky-400 flex items-center justify-center shrink-0 sticker-shadow text-white"><i data-lucide="plane" size={18}></i></div>
-                                    <div className="flex-1 bg-sky-50 border-4 border-[#2D2D2D] rounded-[2rem] p-5 sticker-shadow">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[10px] font-black opacity-40 uppercase">Flight Info</span>
-                                            <span className="text-[10px] font-black opacity-40">{f.time}</span>
-                                        </div>
-                                        <div className="font-black text-lg">{f.flight} | {f.route}</div>
-                                    </div>
-                                </div>
-                            ))}
                             {hotel && (
                                 <div className="flex gap-6 relative z-10">
                                     <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-[#F9D949] flex items-center justify-center shrink-0 sticker-shadow">🏨</div>
@@ -157,13 +148,17 @@
                                     </div>
                                 </div>
                             )}
-                            {currentItems.map((item) => (
+                            {currentItems.map((item, idx) => (
                                 <div key={item.id} className="flex gap-6 relative z-10 group">
-                                    <div className={`w-10 h-10 rounded-full border-4 border-[#2D2D2D] flex items-center justify-center shrink-0 sticker-shadow ${item.highlight ? 'bg-red-500 text-white' : 'bg-white'}`}>{item.icon}</div>
+                                    <div className={`w-10 h-10 rounded-full border-4 border-[#2D2D2D] flex items-center justify-center shrink-0 sticker-shadow ${item.highlight ? 'bg-red-500 text-white' : item.icon === '✈️' ? 'bg-sky-400 text-white' : 'bg-white'}`}>{item.icon || '📍'}</div>
                                     <div className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-[2rem] p-5 sticker-shadow relative ${item.highlight ? 'border-red-500' : ''}`}>
                                         <div className="flex justify-between items-center mb-1">
                                             <span className="text-[10px] font-black opacity-30">{item.time}</span>
-                                            <button onClick={()=>setPlans(plans.map(p=>p.date===activeDate?{...p,items:p.items.filter(i=>i.id!==item.id)}:p))} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="trash-2" size={14}></i></button>
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => moveItem(activeDate, idx, -1)} className="text-gray-400 hover:text-black"><i data-lucide="chevron-up" size={14}></i></button>
+                                                <button onClick={() => moveItem(activeDate, idx, 1)} className="text-gray-400 hover:text-black"><i data-lucide="chevron-down" size={14}></i></button>
+                                                <button onClick={()=>setPlans(plans.map(p=>p.date===activeDate?{...p,items:p.items.filter(i=>i.id!==item.id)}:p))} className="text-red-500"><i data-lucide="trash-2" size={14}></i></button>
+                                            </div>
                                         </div>
                                         <div className={`text-lg font-black ${item.highlight ? 'text-red-500' : ''}`}>{item.title}</div>
                                     </div>
@@ -171,7 +166,7 @@
                             ))}
                         </div>
                         <div className="fixed bottom-24 left-0 right-0 px-8 z-40 max-w-md mx-auto">
-                            <button onClick={() => setShowAddModal(true)} className="w-full py-5 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-full font-black text-2xl sticker-shadow sticker-active">+ ADD PLAN</button>
+                            <button onClick={() => setShowAddModal(true)} className="w-full py-5 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-full font-black text-2xl sticker-shadow sticker-active uppercase">+ ADD PLAN</button>
                         </div>
                     </div>
                 );
@@ -180,14 +175,14 @@
             const Flights = () => {
                 const flights = [
                     { date: '21.05', day: 'Wed', flight: 'CI835', from: 'TPE (T2)', to: 'BKK (T1)', time: '13:30 - 16:20', dur: '3:50h', trans: '6h 15m' },
-                    { date: '21.05', day: 'Wed', flight: 'DE2367', from: 'BKK (T1)', to: 'FRA (T1)', time: '22:35 - 06:00+1', dur: '12:25h' },
-                    { date: '22.05', day: 'Thu', flight: 'DE4439', from: 'FRA (T1)', to: 'FCO (T3)', time: '08:00 - 09:50', dur: '1:50h', trans: '2h 00m' },
+                    { date: '21.05', day: 'Wed', flight: 'DE2367', from: 'BKK (T1)', to: 'FRA (T1)', time: '22:35 - 06:00+1', dur: '12:25h', trans: '2h 00m' },
+                    { date: '22.05', day: 'Thu', flight: 'DE4439', from: 'FRA (T1)', to: 'FCO (T3)', time: '08:00 - 09:50', dur: '1:50h' },
                     { date: '02.06', day: 'Tue', flight: 'DE4324', from: 'BCN (T1)', to: 'FRA (T1)', time: '17:00 - 19:05', dur: '2:05h', trans: '1h 10m' },
                     { date: '02.06', day: 'Tue', flight: 'DE2366', from: 'FRA (T1)', to: 'BKK (T1)', time: '20:15 - 12:35+1', dur: '11:20h' },
                     { date: '10.06', day: 'Wed', flight: 'VZ566', from: 'BKK (T1)', to: 'TPE (T1)', time: '01:55 - 06:45', dur: '4:50h', isLast: true }
                 ];
                 return (
-                    <div className="p-6 pt-10 animate-in slide-in-from-right pb-32 text-black">
+                    <div className="p-6 pt-10 animate-in slide-in-from-right pb-32">
                         <button onClick={() => setView('home')} className="mb-8"><i data-lucide="arrow-left"></i></button>
                         <h2 className="text-5xl font-black italic mb-10 text-center">Flights</h2>
                         {flights.map((f, i) => (
@@ -286,7 +281,7 @@
                 return (
                     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-6">
                         <div className="bg-[#F5E8DD] w-full max-w-xs rounded-[3rem] border-4 border-[#2D2D2D] p-10 sticker-shadow text-black">
-                            <h3 className="text-3xl font-black mb-8 italic text-center underline">NEW PLAN</h3>
+                            <h3 className="text-3xl font-black mb-8 italic text-center underline uppercase">New Plan</h3>
                             <div className="space-y-6">
                                 <div className="flex gap-2">
                                     <input type="time" value={time} onChange={e=>setTime(e.target.value)} className="flex-1 bg-white border-4 border-[#2D2D2D] rounded-2xl p-4 font-black" />
