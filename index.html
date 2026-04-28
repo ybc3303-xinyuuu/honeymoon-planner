@@ -145,4 +145,94 @@
                         {isHotel && (
                             <div className="mt-3 pt-3 border-t-2 border-dashed border-gray-100">
                                 <a href={hotel.map} target="_blank" className="text-blue-600 font-bold flex items-center gap-1 underline underline-offset-4">
-                                    <i data-lucide="map-pin" size
+                                    <i data-lucide="map-pin" size="12"></i> {hotel.name}
+                                </a>
+                                <div className="text-[10px] mt-1 opacity-50">{hotel.info}</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 子頁面：航班 ---
+        function FlightsView() {
+            return (
+                <div className="p-6 pt-10">
+                    <h2 className="text-3xl font-black mb-8 italic">Flights</h2>
+                    <div className="space-y-6">
+                        {FLIGHTS.map((f, i) => (
+                            <div key={i} className="bg-white border-4 border-[#2D2D2D] rounded-[2rem] overflow-hidden sticker-shadow">
+                                <div className="bg-[#F9D949] p-3 px-6 flex justify-between border-b-4 border-[#2D2D2D] font-black text-xs uppercase">
+                                    <span>{f.date}</span><span>{f.flight}</span>
+                                </div>
+                                <div className="p-6">
+                                    <div className="text-2xl font-black">{f.route}</div>
+                                    <div className="text-blue-600 font-bold my-1">{f.time}</div>
+                                    <a href={`https://www.google.com/search?q=${f.flight}`} target="_blank" className="text-[10px] opacity-40 underline">Google 航班動態 ➔</a>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 子頁面：記帳本 (置頂大計算機) ---
+        function BudgetView() {
+            const [val, setVal] = useState('');
+            const [mode, setMode] = useState('EUR'); // EUR or THB
+            const rate = mode === 'EUR' ? 35.5 : 0.92;
+
+            return (
+                <div className="p-6">
+                    <div className="bg-white border-4 border-[#2D2D2D] rounded-[3rem] p-8 mb-8 sticker-shadow">
+                        <div className="flex justify-between mb-4">
+                            <span className="font-black opacity-30">QUICK RECORD</span>
+                            <button onClick={() => setMode(mode === 'EUR' ? 'THB' : 'EUR')} className="bg-[#2D2D2D] text-white px-4 py-1 rounded-full text-xs font-black">
+                                切換 {mode === 'EUR' ? '泰銖' : '歐元'}
+                            </button>
+                        </div>
+                        <input type="number" value={val} onChange={e => setVal(e.target.value)} className="w-full text-6xl font-black outline-none" placeholder="0" />
+                        <div className="text-2xl text-blue-600 font-black mt-2">≈ NT$ {val ? Math.round(val * rate).toLocaleString() : 0}</div>
+                    </div>
+                    <button className="w-full py-6 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-[2rem] text-2xl font-black sticker-shadow sticker-active mb-10">確認記帳</button>
+                </div>
+            );
+        }
+
+        // --- 懸浮計算機組件 ---
+        function GlobalCalculator({ onClose }) {
+            const [val, setVal] = useState('');
+            return (
+                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-center justify-center p-6">
+                    <div className="bg-[#F9D949] w-full max-w-xs rounded-[3rem] border-4 border-[#2D2D2D] p-10 relative sticker-shadow animate-in zoom-in duration-200">
+                        <button onClick={onClose} className="absolute right-6 top-6"><i data-lucide="x"></i></button>
+                        <h3 className="text-3xl font-black mb-8 italic">Calc.</h3>
+                        <input type="number" autoFocus className="w-full text-4xl p-4 rounded-2xl border-4 border-[#2D2D2D] font-black outline-none mb-6 shadow-inner" value={val} onChange={e => setVal(e.target.value)} placeholder="€" />
+                        <div className="bg-white p-6 rounded-2xl border-4 border-[#2D2D2D] text-center font-black text-4xl text-blue-600">NT$ {val ? Math.round(val * 35.5).toLocaleString() : 0}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ChecklistView() {
+            return (
+                <div className="p-6">
+                    <h2 className="text-3xl font-black mb-8 italic">Packing List</h2>
+                    <div className="space-y-4">
+                        {['護照', '郵輪正裝', '歐規轉接頭', '泰銖/歐元現金'].map(i => (
+                            <div key={i} className="bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex items-center gap-4 sticker-shadow">
+                                <input type="checkbox" className="w-6 h-6 border-4 border-[#2D2D2D] rounded" />
+                                <span className="font-black text-lg">{i}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
