@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Honeymoon 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #F5E8DD; }
+        .sticker-shadow { box-shadow: 6px 6px 0px 0px #2D2D2D; }
+        .sticker-active:active { box-shadow: 2px 2px 0px 0px #2D2D2D; transform: translate(2px, 2px); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const PLANS = [
+            { date: '5/21', city: '台北 ➔ 曼谷', items: [{ time: '09:30', title: '機場接送：基隆 ➔ 桃機', icon: '🚗' }, { time: '13:30', title: 'TPE 起飛', icon: '✈️' }] },
+            { date: '5/22', city: '羅馬', items: [{ time: '09:50', title: '抵達羅馬 FCO', icon: '🇮🇹' }, { time: '15:00', title: '飯店 Check-in', icon: '🔑' }] },
+            { date: '5/23', city: '羅馬', items: [{ time: '10:30', title: '梵蒂岡博物館', icon: '🏛️' }] }
+        ];
+
+        function App() {
+            const [view, setView] = useState('home');
+            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [view]);
+
+            return (
+                <div className="max-w-md mx-auto min-h-screen p-6 pb-32">
+                    {view === 'home' ? (
+                        <div className="pt-10">
+                            <h1 className="text-4xl font-black italic text-[#A67B5B] text-center mb-10">Honeymoon 2026</h1>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div onClick={() => setView('itinerary')} className="col-span-2 h-40 bg-[#B5C0D0] rounded-[2.5rem] p-6 text-white border-4 border-[#2D2D2D] sticker-shadow sticker-active cursor-pointer">
+                                    <h2 className="text-2xl font-black">行程計畫</h2>
+                                </div>
+                                <div className="h-40 bg-[#F9D949] rounded-3xl p-4 border-4 border-[#2D2D2D] sticker-shadow sticker-active">
+                                    <div className="font-black">機票航班</div>
+                                </div>
+                                <div className="h-40 bg-[#CCD3CA] rounded-3xl p-4 border-4 border-[#2D2D2D] sticker-shadow sticker-active">
+                                    <div className="font-black">蜜月帳本</div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="pt-10">
+                            <button onClick={() => setView('home')} className="mb-6 opacity-50 font-black">← 返回</button>
+                            {PLANS.map((p, i) => (
+                                <div key={i} className="bg-white border-4 border-[#2D2D2D] rounded-[2rem] p-6 mb-6 sticker-shadow">
+                                    <div className="flex justify-between border-b-2 border-dashed mb-4 pb-2">
+                                        <span className="bg-[#F9D949] px-2 py-0.5 rounded-full text-xs">{p.date}</span>
+                                        <span className="font-black">{p.city}</span>
+                                    </div>
+                                    {p.items.map((item, idx) => (
+                                        <div key={idx} className="flex gap-4 mb-3">
+                                            <span className="text-xl">{item.icon}</span>
+                                            <div>
+                                                <div className="text-[10px] opacity-40">{item.time}</div>
+                                                <div className="font-black">{item.title}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
