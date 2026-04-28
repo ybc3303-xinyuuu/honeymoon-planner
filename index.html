@@ -58,15 +58,6 @@
                 '6/10': { city: 'Taipei', weather: '☁️ 27°C' }
             };
 
-            const FLIGHT_DATA = [
-                { date: '5/21', flight: 'CI835', route: 'TPE ➔ BKK', time: '13:30 - 16:20' },
-                { date: '5/21', flight: 'DE2367', route: 'BKK ➔ FRA', time: '22:35 - 06:00+1' },
-                { date: '5/22', flight: 'DE4439', route: 'FRA ➔ FCO', time: '08:00 - 09:50' },
-                { date: '6/2', flight: 'DE4324', route: 'BCN ➔ FRA', time: '17:00 - 19:05' },
-                { date: '6/2', flight: 'DE2366', route: 'FRA ➔ BKK', time: '20:15 - 12:35+1' },
-                { date: '6/10', flight: 'VZ566', route: 'BKK ➔ TPE', time: '01:55 - 06:45' }
-            ];
-
             const getHotelForDate = (dateStr) => {
                 const d = new Date(`2026/${dateStr}`);
                 if (d >= new Date('2026/5/22') && d <= new Date('2026/5/25')) 
@@ -117,7 +108,6 @@
                 const info = CITY_INFO[activeDate] || { city: 'Exploring', weather: '--' };
                 const hotel = getHotelForDate(activeDate);
                 const currentItems = plans.find(p => p.date === activeDate)?.items || [];
-                const dayFlights = FLIGHT_DATA.filter(f => f.date === activeDate);
                 
                 return (
                     <div className="animate-in slide-in-from-right pb-40">
@@ -136,18 +126,6 @@
                             </div>
                         </div>
                         <div className="p-6 timeline-line relative space-y-6">
-                            {dayFlights.map((f, idx) => (
-                                <div key={`f-${idx}`} className="flex gap-6 relative z-10">
-                                    <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-sky-400 flex items-center justify-center shrink-0 sticker-shadow text-white"><i data-lucide="plane" size={18}></i></div>
-                                    <div className="flex-1 bg-sky-50 border-4 border-[#2D2D2D] rounded-[2rem] p-5 sticker-shadow">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[10px] font-black opacity-40 uppercase">Flight Info</span>
-                                            <span className="text-[10px] font-black opacity-40">{f.time}</span>
-                                        </div>
-                                        <div className="font-black text-lg">{f.flight} | {f.route}</div>
-                                    </div>
-                                </div>
-                            ))}
                             {hotel && (
                                 <div className="flex gap-6 relative z-10">
                                     <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-[#F9D949] flex items-center justify-center shrink-0 sticker-shadow">🏨</div>
@@ -159,7 +137,7 @@
                             )}
                             {currentItems.map((item) => (
                                 <div key={item.id} className="flex gap-6 relative z-10 group">
-                                    <div className={`w-10 h-10 rounded-full border-4 border-[#2D2D2D] flex items-center justify-center shrink-0 sticker-shadow ${item.highlight ? 'bg-red-500 text-white' : 'bg-white'}`}>{item.icon}</div>
+                                    <div className={`w-10 h-10 rounded-full border-4 border-[#2D2D2D] flex items-center justify-center shrink-0 sticker-shadow ${item.highlight ? 'bg-red-500' : 'bg-white'}`}>{item.icon}</div>
                                     <div className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-[2rem] p-5 sticker-shadow relative ${item.highlight ? 'border-red-500' : ''}`}>
                                         <div className="flex justify-between items-center mb-1">
                                             <span className="text-[10px] font-black opacity-30">{item.time}</span>
