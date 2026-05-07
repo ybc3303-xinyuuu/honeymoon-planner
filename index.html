@@ -81,6 +81,8 @@
                         };
                         set(dbRef, initial);
                     }
+                }, (error) => {
+                    console.error("Firebase Error:", error);
                 });
                 return () => unsubscribe();
             }, []);
@@ -91,7 +93,16 @@
 
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [view, activeDate, data]);
 
-            if (!data) return <div className="flex justify-center items-center h-screen font-black italic text-2xl">SYNCING...</div>;
+            // 如果資料還沒從 Firebase 抓到，顯示 Loading 畫面
+            if (!data) {
+                return (
+                    <div className="flex justify-center items-center h-screen bg-[#F5E8DD]">
+                        <div className="text-center font-black italic text-xl animate-pulse text-[#A67B5B]">
+                            ✈️ SYNCING DATA...
+                        </div>
+                    </div>
+                );
+            }
 
             const getHotelForDate = (dateStr) => {
                 const d = new Date(`2026/${dateStr}`);
@@ -160,7 +171,7 @@
                                             <button onClick={() => {
                                                 const newPlans = data.plans.map(p => p.date === activeDate ? { ...p, items: p.items.filter(i => i.id !== item.id) } : p);
                                                 updateCloud({ ...data, plans: newPlans });
-                                            }} className="text-red-500 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" size={14}></i></button>
+                                            }} className="text-red-500"><i data-lucide="trash-2" size={14}></i></button>
                                         </div>
                                         <div className={`text-lg font-black ${item.highlight ? 'text-red-500' : ''}`}>{item.title}</div>
                                     </div>
@@ -206,7 +217,7 @@
                                         <div className="font-black text-red-500">{e.curr} {e.amount}</div>
                                         <button onClick={()=>{
                                             updateCloud({ ...data, expenses: expenses.filter(i=>i.id!==e.id) });
-                                        }} className="text-gray-200 hover:text-red-500"><i data-lucide="trash-2" size={16}></i></button>
+                                        }} className="text-gray-200"><i data-lucide="trash-2" size={16}></i></button>
                                     </div>
                                 </div>
                             ))}
@@ -242,7 +253,7 @@
                                         <div className={`w-6 h-6 border-2 border-black rounded ${item.done ? 'bg-black' : ''}`}></div>
                                         <span className={`text-lg font-black ${item.done ? 'line-through' : ''}`}>{item.text}</span>
                                     </div>
-                                    <button onClick={() => updateCloud({ ...data, checklist: checklist.filter(i => i.id !== item.id) })} className="text-red-500 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2"></i></button>
+                                    <button onClick={() => updateCloud({ ...data, checklist: checklist.filter(i => i.id !== item.id) })} className="text-red-500"><i data-lucide="trash-2"></i></button>
                                 </div>
                             ))}
                         </div>
