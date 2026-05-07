@@ -26,12 +26,12 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyDtVpJ7_iqayPNGEa_68HcwJlvB0lAyAZA",
             authDomain: "honeymoon-planner-31db3.firebaseapp.com",
+            databaseURL: "https://honeymoon-planner-31db3-default-rtdb.firebaseio.com/",
             projectId: "honeymoon-planner-31db3",
             storageBucket: "honeymoon-planner-31db3.firebasestorage.app",
             messagingSenderId: "255565061415",
@@ -40,8 +40,8 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const docRef = doc(db, "planner", "global_data");
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'planner_data');
 
         const { useState, useEffect } = React;
 
@@ -49,7 +49,7 @@
             const [view, setView] = useState('home');
             const [activeDate, setActiveDate] = useState('5/22');
             const [showAddModal, setShowAddModal] = useState(false);
-            const [data, setData] = useState(null); // 雲端同步的總資料
+            const [data, setData] = useState(null);
 
             const CITY_INFO = {
                 '5/21': { city: 'Taipei / Bangkok', weather: '☁️ 28°C' }, '5/22': { city: 'Rome', weather: '☀️ 22°C' },
@@ -65,13 +65,12 @@
                 '6/10': { city: 'Taipei', weather: '☁️ 27°C' }
             };
 
-            // 1. 初始化與雲端監聽
             useEffect(() => {
-                const unsubscribe = onSnapshot(docRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        setData(docSnap.data());
+                const unsubscribe = onValue(dbRef, (snapshot) => {
+                    const cloudData = snapshot.val();
+                    if (cloudData) {
+                        setData(cloudData);
                     } else {
-                        // 初始化預設資料
                         const initial = {
                             plans: [
                                 { date: '5/21', items: [{ id: 'f1', time: '13:30', title: 'CI835 | TPE ➔ BKK', icon: '✈️' }] },
@@ -80,15 +79,14 @@
                             expenses: [],
                             checklist: [{ id: 1, text: '護照與簽證', done: false }]
                         };
-                        setDoc(docRef, initial);
+                        set(dbRef, initial);
                     }
                 });
                 return () => unsubscribe();
             }, []);
 
-            // 更新雲端函數
             const updateCloud = (newData) => {
-                updateDoc(docRef, newData);
+                set(dbRef, newData);
             };
 
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [view, activeDate, data]);
@@ -125,7 +123,7 @@
             const Itinerary = () => {
                 const dates = ["5/21", "5/22", "5/23", "5/24", "5/25", "5/26", "5/27", "5/28", "5/29", "5/30", "5/31", "6/1", "6/2", "6/3", "6/4", "6/5", "6/6", "6/7", "6/8", "6/9", "6/10"];
                 const info = CITY_INFO[activeDate] || { city: 'Exploring', weather: '--' };
-                const currentItems = data.plans.find(p => p.date === activeDate)?.items || [];
+                const currentItems = (data.plans || []).find(p => p.date === activeDate)?.items || [];
                 
                 return (
                     <div className="animate-in slide-in-from-right pb-40">
@@ -181,7 +179,8 @@
                 const [title, setTitle] = useState('');
                 const [curr, setCurr] = useState('EUR');
                 const rate = curr === 'EUR' ? 35.5 : 0.92;
-                const total = data.expenses.reduce((s, e) => s + e.twd, 0);
+                const expenses = data.expenses || [];
+                const total = expenses.reduce((s, e) => s + e.twd, 0);
                 return (
                     <div className="p-6 animate-in slide-in-from-right pb-44">
                         <button onClick={() => setView('home')} className="mb-6"><i data-lucide="arrow-left"></i></button>
@@ -194,19 +193,19 @@
                             <div className="text-xl text-blue-600 font-black mt-1">≈ NT$ {Math.round(val * rate).toLocaleString()}</div>
                             <button onClick={() => {
                                 if(!val || !title) return;
-                                const newExp = [{ id: Date.now(), title, amount: val, curr, twd: Math.round(val*rate) }, ...data.expenses];
+                                const newExp = [{ id: Date.now(), title, amount: val, curr, twd: Math.round(val*rate) }, ...expenses];
                                 updateCloud({ ...data, expenses: newExp });
                                 setVal(''); setTitle('');
                             }} className="w-full mt-6 py-4 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-2xl font-black sticker-active italic">ADD RECORD</button>
                         </div>
                         <div className="space-y-4">
-                            {data.expenses.map(e => (
+                            {expenses.map(e => (
                                 <div key={e.id} className="bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex justify-between items-center sticker-shadow">
                                     <div className="font-black">{e.title}</div>
                                     <div className="flex items-center gap-4 text-right">
                                         <div className="font-black text-red-500">{e.curr} {e.amount}</div>
                                         <button onClick={()=>{
-                                            updateCloud({ ...data, expenses: data.expenses.filter(i=>i.id!==e.id) });
+                                            updateCloud({ ...data, expenses: expenses.filter(i=>i.id!==e.id) });
                                         }} className="text-gray-200 hover:text-red-500"><i data-lucide="trash-2" size={16}></i></button>
                                     </div>
                                 </div>
@@ -219,6 +218,7 @@
 
             const Packing = () => {
                 const [text, setText] = useState('');
+                const checklist = data.checklist || [];
                 return (
                     <div className="p-6 pt-10 animate-in slide-in-from-right pb-32">
                         <button onClick={() => setView('home')} className="mb-8"><i data-lucide="arrow-left"></i></button>
@@ -227,22 +227,22 @@
                             <input value={text} onChange={e=>setText(e.target.value)} placeholder="Add item..." className="flex-1 p-3 font-black outline-none bg-transparent" />
                             <button onClick={()=>{ 
                                 if(text) {
-                                    updateCloud({ ...data, checklist: [...data.checklist, {id:Date.now(), text, done:false}] });
+                                    updateCloud({ ...data, checklist: [...checklist, {id:Date.now(), text, done:false}] });
                                     setText('');
                                 } 
                             }} className="bg-[#2D2D2D] text-white px-6 rounded-xl font-black">ADD</button>
                         </div>
                         <div className="space-y-4">
-                            {data.checklist.map(item => (
+                            {checklist.map(item => (
                                 <div key={item.id} className="flex gap-4 items-center group">
                                     <div onClick={() => {
-                                        const newList = data.checklist.map(i => i.id === item.id ? {...i, done: !i.done} : i);
+                                        const newList = checklist.map(i => i.id === item.id ? {...i, done: !i.done} : i);
                                         updateCloud({ ...data, checklist: newList });
                                     }} className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex items-center gap-4 sticker-shadow ${item.done ? 'opacity-30' : ''}`}>
                                         <div className={`w-6 h-6 border-2 border-black rounded ${item.done ? 'bg-black' : ''}`}></div>
                                         <span className={`text-lg font-black ${item.done ? 'line-through' : ''}`}>{item.text}</span>
                                     </div>
-                                    <button onClick={() => updateCloud({ ...data, checklist: data.checklist.filter(i => i.id !== item.id) })} className="text-red-500 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2"></i></button>
+                                    <button onClick={() => updateCloud({ ...data, checklist: checklist.filter(i => i.id !== item.id) })} className="text-red-500 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2"></i></button>
                                 </div>
                             ))}
                         </div>
@@ -306,7 +306,7 @@
                                     <button onClick={()=>setShowAddModal(false)} className="flex-1 py-4 bg-white border-4 border-[#2D2D2D] rounded-xl font-black">BACK</button>
                                     <button onClick={()=>{
                                         const newItem = { id: Date.now(), time, title, icon: emoji, highlight: isRed };
-                                        let newPlans = [...data.plans];
+                                        let newPlans = [...(data.plans || [])];
                                         const dayIdx = newPlans.findIndex(p=>p.date===activeDate);
                                         if(dayIdx > -1) newPlans[dayIdx] = { ...newPlans[dayIdx], items: [...newPlans[dayIdx].items, newItem] };
                                         else newPlans.push({ date: activeDate, items: [newItem] });
