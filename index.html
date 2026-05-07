@@ -11,10 +11,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700;1,900&family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #F5E8DD; -webkit-tap-highlight-color: transparent; color: #2D2D2D; }
         .font-diary { font-family: 'Playfair Display', serif; font-style: italic; }
-        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .custom-scrollbar::-webkit-scrollbar { height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #2D2D2D; border-radius: 10px; }
@@ -26,12 +24,11 @@
 <body>
     <div id="root"></div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        
+        // Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyDtVpJ7_iqayPNGEa_68HcwJlvB0lAyAZA",
             authDomain: "honeymoon-planner-31db3.firebaseapp.com",
@@ -42,79 +39,70 @@
             measurementId: "G-DZ7QY24RYP"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const docRef = doc(db, "planner", "global_data");
+
+        const { useState, useEffect } = React;
 
         function App() {
             const [view, setView] = useState('home');
             const [activeDate, setActiveDate] = useState('5/22');
             const [showAddModal, setShowAddModal] = useState(false);
+            const [data, setData] = useState(null); // 雲端同步的總資料
 
             const CITY_INFO = {
-                '5/21': { city: 'Taipei / Bangkok', weather: '☁️ 28°C' },
-                '5/22': { city: 'Rome', weather: '☀️ 22°C' },
-                '5/23': { city: 'Rome', weather: '☀️ 23°C' },
-                '5/24': { city: 'Rome', weather: '⛅ 21°C' },
-                '5/25': { city: 'Civitavecchia', weather: '⚓ 22°C' },
-                '5/26': { city: 'Salerno', weather: '☀️ 24°C' },
-                '5/27': { city: 'At Sea', weather: '🌊 23°C' },
-                '5/28': { city: 'Cannes', weather: '☀️ 22°C' },
-                '5/29': { city: 'Ibiza', weather: '☀️ 25°C' },
-                '5/30': { city: 'Ibiza', weather: '⛅ 24°C' },
-                '5/31': { city: 'Barcelona', weather: '☀️ 24°C' },
-                '6/1': { city: 'Barcelona', weather: '☀️ 25°C' },
-                '6/2': { city: 'Transit', weather: '✈️ --°C' },
-                '6/3': { city: 'Bangkok', weather: '🌧️ 32°C' },
-                '6/4': { city: 'Bangkok', weather: '☀️ 34°C' },
-                '6/5': { city: 'Bangkok', weather: '☀️ 33°C' },
-                '6/6': { city: 'Bangkok', weather: '⛅ 33°C' },
-                '6/7': { city: 'Bangkok', weather: '☀️ 34°C' },
-                '6/8': { city: 'Bangkok', weather: '☀️ 32°C' },
-                '6/9': { city: 'Bangkok', weather: '⛅ 31°C' },
+                '5/21': { city: 'Taipei / Bangkok', weather: '☁️ 28°C' }, '5/22': { city: 'Rome', weather: '☀️ 22°C' },
+                '5/23': { city: 'Rome', weather: '☀️ 23°C' }, '5/24': { city: 'Rome', weather: '⛅ 21°C' },
+                '5/25': { city: 'Civitavecchia', weather: '⚓ 22°C' }, '5/26': { city: 'Salerno', weather: '☀️ 24°C' },
+                '5/27': { city: 'At Sea', weather: '🌊 23°C' }, '5/28': { city: 'Cannes', weather: '☀️ 22°C' },
+                '5/29': { city: 'Ibiza', weather: '☀️ 25°C' }, '5/30': { city: 'Ibiza', weather: '⛅ 24°C' },
+                '5/31': { city: 'Barcelona', weather: '☀️ 24°C' }, '6/1': { city: 'Barcelona', weather: '☀️ 25°C' },
+                '6/2': { city: 'Transit', weather: '✈️ --°C' }, '6/3': { city: 'Bangkok', weather: '🌧️ 32°C' },
+                '6/4': { city: 'Bangkok', weather: '☀️ 34°C' }, '6/5': { city: 'Bangkok', weather: '☀️ 33°C' },
+                '6/6': { city: 'Bangkok', weather: '⛅ 33°C' }, '6/7': { city: 'Bangkok', weather: '☀️ 34°C' },
+                '6/8': { city: 'Bangkok', weather: '☀️ 32°C' }, '6/9': { city: 'Bangkok', weather: '⛅ 31°C' },
                 '6/10': { city: 'Taipei', weather: '☁️ 27°C' }
             };
 
-            const [plans, setPlans] = useState([
-                { date: '5/21', items: [{ id: 'f1', time: '13:30', title: 'CI835 | TPE ➔ BKK', icon: '✈️' }, { id: 'f2', time: '22:35', title: 'DE2367 | BKK ➔ FRA', icon: '✈️' }] },
-                { date: '5/22', items: [{ id: 'f3', time: '08:00', title: 'DE4439 | FRA ➔ FCO', icon: '✈️' }] },
-                { date: '5/23', items: [{ id: 101, time: '10:30', title: '【已訂票】梵蒂岡博物館', icon: '🏛️', highlight: true }] },
-                { date: '5/24', items: [{ id: 102, time: '12:10', title: '【已訂票】羅馬競技場', icon: '⚔️', highlight: true }] },
-                { date: '5/25', items: [{ id: 999, time: '15:00', title: '🚢 報到登船 Check-in', icon: '⚓', highlight: true }, { id: 201, time: '20:00', title: '郵輪啟航：Civitavecchia', icon: '🚢', highlight: false }] },
-                { date: '5/26', items: [{ id: 301, time: '08:00', title: '抵達 Salerno (Amalfi Coast)', icon: '🍋' }, { id: 302, time: '19:00', title: '郵輪啟航 (Salerno)', icon: '🚢' }] },
-                { date: '5/28', items: [{ id: 401, time: '08:00', title: '抵達 Cannes, France', icon: '🇫🇷' }, { id: 402, time: '17:00', title: '郵輪啟航 (Cannes)', icon: '🚢' }] },
-                { date: '5/29', items: [{ id: 501, time: '19:00', title: '抵達 Ibiza, Spain (過夜)', icon: '💃' }] },
-                { date: '5/30', items: [{ id: 502, time: '17:00', title: '郵輪啟航 (Ibiza)', icon: '🚢' }] },
-                { date: '5/31', items: [{ id: 601, time: '06:30', title: '抵達 Barcelona (下船)', icon: '🥘' }] },
-                { date: '6/1', items: [{ id: 103, time: '14:45', title: '【已訂票】聖家堂 入場', icon: '⛪', highlight: true }] },
-                { date: '6/2', items: [{ id: 'f4', time: '17:00', title: 'DE4324 | BCN ➔ FRA', icon: '✈️' }, { id: 'f5', time: '20:15', title: 'DE2366 | FRA ➔ BKK', icon: '✈️' }] },
-                { date: '6/10', items: [{ id: 'f6', time: '01:55', title: 'VZ566 | BKK ➔ TPE', icon: '✈️' }] }
-            ]);
+            // 1. 初始化與雲端監聽
+            useEffect(() => {
+                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        setData(docSnap.data());
+                    } else {
+                        // 初始化預設資料
+                        const initial = {
+                            plans: [
+                                { date: '5/21', items: [{ id: 'f1', time: '13:30', title: 'CI835 | TPE ➔ BKK', icon: '✈️' }] },
+                                { date: '5/23', items: [{ id: 101, time: '10:30', title: '【已訂票】梵蒂岡博物館', icon: '🏛️', highlight: true }] }
+                            ],
+                            expenses: [],
+                            checklist: [{ id: 1, text: '護照與簽證', done: false }]
+                        };
+                        setDoc(docRef, initial);
+                    }
+                });
+                return () => unsubscribe();
+            }, []);
+
+            // 更新雲端函數
+            const updateCloud = (newData) => {
+                updateDoc(docRef, newData);
+            };
+
+            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [view, activeDate, data]);
+
+            if (!data) return <div className="flex justify-center items-center h-screen font-black italic text-2xl">SYNCING...</div>;
 
             const getHotelForDate = (dateStr) => {
                 const d = new Date(`2026/${dateStr}`);
-                if (d >= new Date('2026/5/22') && d <= new Date('2026/5/25')) return { name: 'Domus Appia 154', url: 'https://maps.google.com', note: '✓ 有含早餐 | 入 15:00 退 10:00' };
-                if (d >= new Date('2026/5/31') && d <= new Date('2026/6/2')) return { name: 'Aparthotel Silver', url: 'https://maps.google.com', note: '✗ 不含早餐 | 入 15:00 退 11:00' };
-                if (d >= new Date('2026/6/3') && d <= new Date('2026/6/8')) return { name: 'Gardina Asoke Hotel', url: 'https://maps.google.com', note: '✗ 不含早餐 | 入 14:00 退 12:00' };
-                if (d >= new Date('2026/6/8') && d <= new Date('2026/6/9')) return { name: 'Eastin Grand Hotel Phayathai', url: 'https://maps.google.com', note: '✓ 有含早餐 | 入 14:00 退 12:00' };
+                if (d >= new Date('2026/5/22') && d <= new Date('2026/5/25')) return { name: 'Domus Appia 154', note: '✓ 有含早餐' };
+                if (d >= new Date('2026/5/31') && d <= new Date('2026/6/2')) return { name: 'Aparthotel Silver', note: '✗ 不含早餐' };
+                if (d >= new Date('2026/6/3') && d <= new Date('2026/6/8')) return { name: 'Gardina Asoke Hotel', note: '✗ 不含早餐' };
+                if (d >= new Date('2026/6/8') && d <= new Date('2026/6/9')) return { name: 'Eastin Grand Hotel Phayathai', note: '✓ 有含早餐' };
                 return null;
             };
-
-            const moveItem = (date, index, direction) => {
-                const dayPlan = plans.find(p => p.date === date);
-                if (!dayPlan) return;
-                const newItems = [...dayPlan.items];
-                const targetIndex = index + direction;
-                if (targetIndex < 0 || targetIndex >= newItems.length) return;
-                [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
-                setPlans(plans.map(p => p.date === date ? { ...p, items: newItems } : p));
-            };
-
-            const [expenses, setExpenses] = useState([]);
-            const [checklist, setChecklist] = useState([{ id: 1, text: '護照與簽證', done: false }, { id: 2, text: '歐規轉接頭', done: false }]);
-
-            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [view, activeDate, plans, checklist, expenses]);
 
             const Home = () => (
                 <div className="p-6 pt-32 animate-in fade-in">
@@ -124,7 +112,7 @@
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div onClick={() => setView('itinerary')} className="col-span-2 h-40 bg-[#B5C0D0] rounded-[2.5rem] p-8 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-between text-white">
-                            <span><i data-lucide="calendar" size={32}></i></span>
+                            <span className="text-2xl">🗓️</span>
                             <span className="text-4xl font-black italic">ITINERARY</span>
                         </div>
                         <div onClick={() => setView('flights')} className="h-40 bg-[#F9D949] rounded-3xl p-6 border-4 border-[#2D2D2D] sticker-shadow sticker-active flex flex-col justify-between"><i data-lucide="plane"></i><span className="text-xl font-black italic">FLIGHTS</span></div>
@@ -137,8 +125,7 @@
             const Itinerary = () => {
                 const dates = ["5/21", "5/22", "5/23", "5/24", "5/25", "5/26", "5/27", "5/28", "5/29", "5/30", "5/31", "6/1", "6/2", "6/3", "6/4", "6/5", "6/6", "6/7", "6/8", "6/9", "6/10"];
                 const info = CITY_INFO[activeDate] || { city: 'Exploring', weather: '--' };
-                const hotel = getHotelForDate(activeDate);
-                const currentItems = plans.find(p => p.date === activeDate)?.items || [];
+                const currentItems = data.plans.find(p => p.date === activeDate)?.items || [];
                 
                 return (
                     <div className="animate-in slide-in-from-right pb-40">
@@ -157,12 +144,12 @@
                             </div>
                         </div>
                         <div className="p-6 timeline-line relative space-y-6">
-                            {hotel && (
+                            {getHotelForDate(activeDate) && (
                                 <div className="flex gap-6 relative z-10">
                                     <div className="w-10 h-10 rounded-full border-4 border-[#2D2D2D] bg-[#F9D949] flex items-center justify-center shrink-0 sticker-shadow">🏨</div>
                                     <div className="flex-1 bg-white border-4 border-[#2D2D2D] rounded-[2rem] p-5 sticker-shadow">
-                                        <a href={hotel.url} target="_blank" className="font-black text-lg underline decoration-dashed hover:text-blue-600 block">{hotel.name}</a>
-                                        <div className="text-[10px] font-black mt-1 opacity-60">{hotel.note}</div>
+                                        <div className="font-black text-lg underline decoration-dashed">{getHotelForDate(activeDate).name}</div>
+                                        <div className="text-[10px] font-black mt-1 opacity-60">{getHotelForDate(activeDate).note}</div>
                                     </div>
                                 </div>
                             )}
@@ -172,11 +159,10 @@
                                     <div className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-[2rem] p-5 sticker-shadow relative ${item.highlight ? 'border-red-500' : ''}`}>
                                         <div className="flex justify-between items-center mb-1">
                                             <span className="text-[10px] font-black opacity-30">{item.time}</span>
-                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => moveItem(activeDate, idx, -1)} className="text-gray-400 hover:text-black"><i data-lucide="chevron-up" size={14}></i></button>
-                                                <button onClick={() => moveItem(activeDate, idx, 1)} className="text-gray-400 hover:text-black"><i data-lucide="chevron-down" size={14}></i></button>
-                                                <button onClick={()=>setPlans(plans.map(p=>p.date===activeDate?{...p,items:p.items.filter(i=>i.id!==item.id)}:p))} className="text-red-500"><i data-lucide="trash-2" size={14}></i></button>
-                                            </div>
+                                            <button onClick={() => {
+                                                const newPlans = data.plans.map(p => p.date === activeDate ? { ...p, items: p.items.filter(i => i.id !== item.id) } : p);
+                                                updateCloud({ ...data, plans: newPlans });
+                                            }} className="text-red-500 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" size={14}></i></button>
                                         </div>
                                         <div className={`text-lg font-black ${item.highlight ? 'text-red-500' : ''}`}>{item.title}</div>
                                     </div>
@@ -185,6 +171,80 @@
                         </div>
                         <div className="fixed bottom-24 left-0 right-0 px-8 z-40 max-w-md mx-auto">
                             <button onClick={() => setShowAddModal(true)} className="w-full py-5 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-full font-black text-2xl sticker-shadow sticker-active uppercase">+ ADD PLAN</button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const Budget = () => {
+                const [val, setVal] = useState('');
+                const [title, setTitle] = useState('');
+                const [curr, setCurr] = useState('EUR');
+                const rate = curr === 'EUR' ? 35.5 : 0.92;
+                const total = data.expenses.reduce((s, e) => s + e.twd, 0);
+                return (
+                    <div className="p-6 animate-in slide-in-from-right pb-44">
+                        <button onClick={() => setView('home')} className="mb-6"><i data-lucide="arrow-left"></i></button>
+                        <div className="bg-white border-4 border-[#2D2D2D] rounded-[2.5rem] p-8 mb-8 sticker-shadow">
+                            <div className="flex gap-2 mb-4">
+                                <input type="text" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Item..." className="flex-1 text-xl font-black outline-none border-b-2 border-dashed" />
+                                <button onClick={()=>setCurr(curr==='EUR'?'THB':'EUR')} className="bg-black text-white px-3 rounded-full text-[10px]">{curr}</button>
+                            </div>
+                            <input type="number" value={val} onChange={e=>setVal(e.target.value)} className="w-full text-5xl font-black outline-none italic" placeholder="0" />
+                            <div className="text-xl text-blue-600 font-black mt-1">≈ NT$ {Math.round(val * rate).toLocaleString()}</div>
+                            <button onClick={() => {
+                                if(!val || !title) return;
+                                const newExp = [{ id: Date.now(), title, amount: val, curr, twd: Math.round(val*rate) }, ...data.expenses];
+                                updateCloud({ ...data, expenses: newExp });
+                                setVal(''); setTitle('');
+                            }} className="w-full mt-6 py-4 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-2xl font-black sticker-active italic">ADD RECORD</button>
+                        </div>
+                        <div className="space-y-4">
+                            {data.expenses.map(e => (
+                                <div key={e.id} className="bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex justify-between items-center sticker-shadow">
+                                    <div className="font-black">{e.title}</div>
+                                    <div className="flex items-center gap-4 text-right">
+                                        <div className="font-black text-red-500">{e.curr} {e.amount}</div>
+                                        <button onClick={()=>{
+                                            updateCloud({ ...data, expenses: data.expenses.filter(i=>i.id!==e.id) });
+                                        }} className="text-gray-200 hover:text-red-500"><i data-lucide="trash-2" size={16}></i></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="fixed bottom-24 left-0 right-0 px-8 max-w-md mx-auto"><div className="bg-[#2D2D2D] text-[#F9D949] p-4 rounded-3xl border-4 border-white flex justify-between items-center sticker-shadow"><span className="text-[10px] font-black italic">TOTAL SPENT</span><span className="text-lg font-black underline">NT$ {total.toLocaleString()}</span></div></div>
+                    </div>
+                );
+            };
+
+            const Packing = () => {
+                const [text, setText] = useState('');
+                return (
+                    <div className="p-6 pt-10 animate-in slide-in-from-right pb-32">
+                        <button onClick={() => setView('home')} className="mb-8"><i data-lucide="arrow-left"></i></button>
+                        <h2 className="text-5xl font-black italic mb-8">Packing</h2>
+                        <div className="flex gap-4 mb-8 bg-white border-4 border-[#2D2D2D] rounded-2xl p-2 sticker-shadow">
+                            <input value={text} onChange={e=>setText(e.target.value)} placeholder="Add item..." className="flex-1 p-3 font-black outline-none bg-transparent" />
+                            <button onClick={()=>{ 
+                                if(text) {
+                                    updateCloud({ ...data, checklist: [...data.checklist, {id:Date.now(), text, done:false}] });
+                                    setText('');
+                                } 
+                            }} className="bg-[#2D2D2D] text-white px-6 rounded-xl font-black">ADD</button>
+                        </div>
+                        <div className="space-y-4">
+                            {data.checklist.map(item => (
+                                <div key={item.id} className="flex gap-4 items-center group">
+                                    <div onClick={() => {
+                                        const newList = data.checklist.map(i => i.id === item.id ? {...i, done: !i.done} : i);
+                                        updateCloud({ ...data, checklist: newList });
+                                    }} className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex items-center gap-4 sticker-shadow ${item.done ? 'opacity-30' : ''}`}>
+                                        <div className={`w-6 h-6 border-2 border-black rounded ${item.done ? 'bg-black' : ''}`}></div>
+                                        <span className={`text-lg font-black ${item.done ? 'line-through' : ''}`}>{item.text}</span>
+                                    </div>
+                                    <button onClick={() => updateCloud({ ...data, checklist: data.checklist.filter(i => i.id !== item.id) })} className="text-red-500 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2"></i></button>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 );
@@ -215,78 +275,13 @@
                                         <div className="text-2xl font-black text-red-500 italic mb-3">{f.time} <span className="text-[10px] text-gray-400">({f.dur})</span></div>
                                         <div className="inline-flex items-center gap-3 bg-[#F5E8DD] border-2 border-[#2D2D2D] rounded-full px-5 py-2">
                                             <i data-lucide="briefcase" size={14}></i>
-                                            <span className="text-xs font-black">
-                                                Checked <span className="text-red-500">{f.isLast ? '30kg' : '20kg'}</span> / Carry-on <span className="text-red-500">{f.isLast ? '7kg' : '8kg'}</span>
-                                            </span>
+                                            <span className="text-xs font-black">Checked <span className="text-red-500">{f.isLast ? '30kg' : '20kg'}</span> / Carry-on <span className="text-red-500">{f.isLast ? '7kg' : '8kg'}</span></span>
                                         </div>
                                     </div>
                                 </div>
                                 {f.trans && <div className="flex justify-center mt-4"><div className="bg-[#2D2D2D] text-[#F9D949] px-4 py-1 rounded-full text-[10px] font-black sticker-shadow italic">Transfer: {f.trans}</div></div>}
                             </div>
                         ))}
-                    </div>
-                );
-            };
-
-            const Budget = () => {
-                const [val, setVal] = useState('');
-                const [title, setTitle] = useState('');
-                const [curr, setCurr] = useState('EUR');
-                const rate = curr === 'EUR' ? 35.5 : 0.92;
-                const total = expenses.reduce((s, e) => s + e.twd, 0);
-                return (
-                    <div className="p-6 animate-in slide-in-from-right pb-44">
-                        <button onClick={() => setView('home')} className="mb-6"><i data-lucide="arrow-left"></i></button>
-                        <div className="bg-white border-4 border-[#2D2D2D] rounded-[2.5rem] p-8 mb-8 sticker-shadow">
-                            <div className="flex gap-2 mb-4 items-center">
-                                <input type="text" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Item..." className="w-3/4 text-xl font-black outline-none border-b-2 border-dashed overflow-hidden" />
-                                <button onClick={()=>setCurr(curr==='EUR'?'THB':'EUR')} className="w-1/4 bg-black text-white py-1 rounded-full text-[10px] flex-shrink-0">{curr}</button>
-                            </div>
-                            <input type="number" value={val} onChange={e=>setVal(e.target.value)} className="w-full text-5xl font-black outline-none italic" placeholder="0" />
-                            <div className="text-xl text-blue-600 font-black mt-1">≈ NT$ {Math.round(val * rate).toLocaleString()}</div>
-                            <button onClick={() => {
-                                if(!val || !title) return;
-                                setExpenses([{ id: Date.now(), title, amount: val, curr, twd: Math.round(val*rate) }, ...expenses]);
-                                setVal(''); setTitle('');
-                            }} className="w-full mt-6 py-4 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-2xl font-black sticker-active italic">ADD RECORD</button>
-                        </div>
-                        <div className="space-y-4">
-                            {expenses.map(e => (
-                                <div key={e.id} className="bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex justify-between items-center sticker-shadow">
-                                    <div className="font-black">{e.title}</div>
-                                    <div className="flex items-center gap-4 text-right">
-                                        <div className="font-black text-red-500">{e.curr} {e.amount}</div>
-                                        <button onClick={()=>setExpenses(expenses.filter(i=>i.id!==e.id))} className="text-gray-200 hover:text-red-500"><i data-lucide="trash-2" size={16}></i></button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="fixed bottom-24 left-0 right-0 px-8 max-w-md mx-auto"><div className="bg-[#2D2D2D] text-[#F9D949] p-4 rounded-3xl border-4 border-white flex justify-between items-center sticker-shadow"><span className="text-[10px] font-black italic">TOTAL SPENT</span><span className="text-lg font-black underline">NT$ {total.toLocaleString()}</span></div></div>
-                    </div>
-                );
-            };
-
-            const Packing = () => {
-                const [text, setText] = useState('');
-                return (
-                    <div className="p-6 pt-10 animate-in slide-in-from-right pb-32">
-                        <button onClick={() => setView('home')} className="mb-8"><i data-lucide="arrow-left"></i></button>
-                        <h2 className="text-5xl font-black italic mb-8">Packing</h2>
-                        <div className="flex gap-4 mb-8 bg-white border-4 border-[#2D2D2D] rounded-2xl p-2 sticker-shadow">
-                            <input value={text} onChange={e=>setText(e.target.value)} placeholder="Add item..." className="flex-1 p-3 font-black outline-none bg-transparent" />
-                            <button onClick={()=>{ if(text) {setChecklist([...checklist, {id:Date.now(), text, done:false}]); setText('');} }} className="bg-[#2D2D2D] text-white px-6 rounded-xl font-black">ADD</button>
-                        </div>
-                        <div className="space-y-4">
-                            {checklist.map(item => (
-                                <div key={item.id} className="flex gap-4 items-center group">
-                                    <div onClick={() => setChecklist(checklist.map(i => i.id === item.id ? {...i, done: !i.done} : i))} className={`flex-1 bg-white border-4 border-[#2D2D2D] rounded-2xl p-5 flex items-center gap-4 sticker-shadow ${item.done ? 'opacity-30' : ''}`}>
-                                        <div className={`w-6 h-6 border-2 border-black rounded ${item.done ? 'bg-black' : ''}`}></div>
-                                        <span className={`text-lg font-black ${item.done ? 'line-through' : ''}`}>{item.text}</span>
-                                    </div>
-                                    <button onClick={() => setChecklist(checklist.filter(i => i.id !== item.id))} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="trash-2"></i></button>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 );
             };
@@ -311,9 +306,11 @@
                                     <button onClick={()=>setShowAddModal(false)} className="flex-1 py-4 bg-white border-4 border-[#2D2D2D] rounded-xl font-black">BACK</button>
                                     <button onClick={()=>{
                                         const newItem = { id: Date.now(), time, title, icon: emoji, highlight: isRed };
-                                        const exists = plans.find(p=>p.date===activeDate);
-                                        if(exists) setPlans(plans.map(p=>p.date===activeDate ? {...p, items: [...p.items, newItem]} : p));
-                                        else setPlans([...plans, {date: activeDate, items:[newItem]}]);
+                                        let newPlans = [...data.plans];
+                                        const dayIdx = newPlans.findIndex(p=>p.date===activeDate);
+                                        if(dayIdx > -1) newPlans[dayIdx] = { ...newPlans[dayIdx], items: [...newPlans[dayIdx].items, newItem] };
+                                        else newPlans.push({ date: activeDate, items: [newItem] });
+                                        updateCloud({ ...data, plans: newPlans });
                                         setShowAddModal(false);
                                     }} className="flex-1 py-4 bg-[#F9D949] border-4 border-[#2D2D2D] rounded-xl font-black italic">SAVE</button>
                                 </div>
