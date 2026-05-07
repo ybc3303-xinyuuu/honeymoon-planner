@@ -29,10 +29,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script type="text/babel">
-    // 這裡開始是您原本的 Script
     const { useState, useEffect } = React;
     
-    // === 在這裡貼上您截圖中的 Config ===
    const firebaseConfig = {
   apiKey: "AIzaSyDtVpJ7_iqayPNGEa_68HcwJlvB0lAyAZA",
   authDomain: "honeymoon-planner-31db3.firebaseapp.com",
@@ -43,7 +41,6 @@
   measurementId: "G-DZ7QY24RYP"
 };
 
-    // 初始化 Firebase
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
