@@ -25,28 +25,27 @@
 </head>
 <body>
     <div id="root"></div>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-<script type="text/babel">
-    const { useState, useEffect } = React;
-    
-   const firebaseConfig = {
-  apiKey: "AIzaSyDtVpJ7_iqayPNGEa_68HcwJlvB0lAyAZA",
-  authDomain: "honeymoon-planner-31db3.firebaseapp.com",
-  projectId: "honeymoon-planner-31db3",
-  storageBucket: "honeymoon-planner-31db3.firebasestorage.app",
-  messagingSenderId: "255565061415",
-  appId: "1:255565061415:web:7c6aa3469483bc26449d02",
-  measurementId: "G-DZ7QY24RYP"
-};
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
     <script type="text/babel">
         const { useState, useEffect } = React;
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtVpJ7_iqayPNGEa_68HcwJlvB0lAyAZA",
+            authDomain: "honeymoon-planner-31db3.firebaseapp.com",
+            projectId: "honeymoon-planner-31db3",
+            storageBucket: "honeymoon-planner-31db3.firebasestorage.app",
+            messagingSenderId: "255565061415",
+            appId: "1:255565061415:web:7c6aa3469483bc26449d02",
+            measurementId: "G-DZ7QY24RYP"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
 
         function App() {
             const [view, setView] = useState('home');
@@ -95,10 +94,10 @@
 
             const getHotelForDate = (dateStr) => {
                 const d = new Date(`2026/${dateStr}`);
-                if (d >= new Date('2026/5/22') && d <= new Date('2026/5/25')) return { name: 'Domus Appia 154', url: 'https://maps.app.goo.gl/19fVp6GvR7q7sQp18', note: '✓ 有含早餐 | 入 15:00 退 10:00' };
-                if (d >= new Date('2026/5/31') && d <= new Date('2026/6/2')) return { name: 'Aparthotel Silver', url: 'https://maps.app.goo.gl/vN3iS66G6t5D2D5u8', note: '✗ 不含早餐 | 入 15:00 退 11:00' };
-                if (d >= new Date('2026/6/3') && d <= new Date('2026/6/8')) return { name: 'Gardina Asoke Hotel', url: 'https://maps.app.goo.gl/q6H3L66W8P7M9r6k7', note: '✗ 不含早餐 | 入 14:00 退 12:00' };
-                if (d >= new Date('2026/6/8') && d <= new Date('2026/6/9')) return { name: 'Eastin Grand Hotel Phayathai', url: 'https://maps.app.goo.gl/hG5mE77A8W4R3n5y9', note: '✓ 有含早餐 | 入 14:00 退 12:00' };
+                if (d >= new Date('2026/5/22') && d <= new Date('2026/5/25')) return { name: 'Domus Appia 154', url: 'https://maps.google.com', note: '✓ 有含早餐 | 入 15:00 退 10:00' };
+                if (d >= new Date('2026/5/31') && d <= new Date('2026/6/2')) return { name: 'Aparthotel Silver', url: 'https://maps.google.com', note: '✗ 不含早餐 | 入 15:00 退 11:00' };
+                if (d >= new Date('2026/6/3') && d <= new Date('2026/6/8')) return { name: 'Gardina Asoke Hotel', url: 'https://maps.google.com', note: '✗ 不含早餐 | 入 14:00 退 12:00' };
+                if (d >= new Date('2026/6/8') && d <= new Date('2026/6/9')) return { name: 'Eastin Grand Hotel Phayathai', url: 'https://maps.google.com', note: '✓ 有含早餐 | 入 14:00 退 12:00' };
                 return null;
             };
 
